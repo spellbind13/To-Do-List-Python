@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Orbit Tasks</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="aurora aurora-left"></div>
+      <div class="aurora aurora-right"></div>
+
+      <main class="app-frame">
+        <section class="hero-panel">
+          <p class="eyebrow">MVP To-Do List</p>
+          <h1>Plan the day. Clear the noise.</h1>
+          <p class="hero-copy">
+            A focused task board for the smallest useful version of your productivity app:
+            add what matters, see everything at a glance, and mark it done.
+          </p>
+
+          <div class="summary-grid">
+            <article class="summary-card">
+              <span class="summary-label">Total tasks</span>
+              <strong>{{ summary.total }}</strong>
+            </article>
+            <article class="summary-card">
+              <span class="summary-label">Completed</span>
+              <strong>{{ summary.completed }}</strong>
+            </article>
+            <article class="summary-card">
+              <span class="summary-label">Still open</span>
+              <strong>{{ summary.remaining }}</strong>
+            </article>
+          </div>
+
+          <div class="progress-panel" aria-label="Completion progress">
+            <div
+              class="progress-ring"
+              style="--completion-rate: {{ summary.completion_rate }}%;"
+            >
+              <div class="progress-ring-inner">
+                <span>{{ summary.completion_rate }}%</span>
+              </div>
+            </div>
+            <div class="progress-copy">
+              <h2>Momentum</h2>
+              <p>
+                {% if summary.total %}
+                  You have completed {{ summary.completed }} of {{ summary.total }} tasks.
+                {% else %}
+                  Start with one task. The MVP only needs a simple daily rhythm.
+                {% endif %}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="board-panel">
+          <div class="board-header">
+            <div>
+              <p class="eyebrow">Task Board</p>
+              <h2>What needs your attention?</h2>
+            </div>
+          </div>
+
+          <form class="task-form" action="{{ url_for('add_task') }}" method="post">
+            <label class="sr-only" for="title">Task name</label>
+            <input
+              id="title"
+              name="title"
+              type="text"
+              maxlength="120"
+              placeholder="Add a task like 'Finish assignment'"
+              autocomplete="off"
+              required
+            >
+            <button type="submit">Add task</button>
+          </form>
+
+          {% if tasks %}
+            <ul class="task-list">
+              {% for task in tasks %}
+                <li class="task-card {% if task.completed %}task-complete{% endif %}" data-task-card>
+                  <div class="task-main">
+                    <span class="task-state" aria-hidden="true">
+                      {% if task.completed %}OK{% else %}TO{% endif %}
+                    </span>
+                    <div>
+                      <p class="task-title">{{ task.title }}</p>
+                      <p class="task-meta">
+                        {% if task.completed %}
+                          Completed
+                        {% else %}
+                          Ready to finish
+                        {% endif %}
+                      </p>
+                    </div>
+                  </div>
+
+                  {% if not task.completed %}
+                    <form action="{{ url_for('complete_task', task_index=loop.index0) }}" method="post">
+                      <button class="complete-button" type="submit">Mark done</button>
+                    </form>
+                  {% else %}
+                    <span class="done-pill">Done</span>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="empty-state">
+              <h3>No tasks yet</h3>
+              <p>Add your first task to turn the idea into a real workflow.</p>
+            </div>
+          {% endif %}
+        </section>
+      </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>
