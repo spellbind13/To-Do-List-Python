@@ -87,13 +87,4 @@ def delete_task(task_index):
 
 if __name__ == "__main__":
     app.run(debug=True)
-@app.route("/tasks/<int:task_index>/delete", methods=["POST"])
-def delete_task(task_index):
-    tasks = load_tasks()
-
-    if 0 <= task_index < len(tasks):
-        tasks.pop(task_index)
-        save_tasks(tasks)
-
-    return redirect(url_for("index"))
 
