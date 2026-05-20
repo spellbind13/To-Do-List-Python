@@ -1,6 +1,7 @@
 from pathlib import Path
 import json
 from datetime import datetime, date
+import calendar
 
 from flask import Flask, redirect, render_template, request, url_for
 
@@ -71,12 +72,14 @@ def build_monthly_chart(tasks):
     end_year = 2030
     months = []
     counts = {}
+    daily_counts = {}
 
     year = current_year
     month = current_month
     while year < end_year or (year == end_year and month <= 12):
         key = f"{year:04d}-{month:02d}"
         counts[key] = 0
+        daily_counts[key] = {}
         months.append(
             {
                 "key": key,
@@ -98,6 +101,8 @@ def build_monthly_chart(tasks):
         month_key = completed_at[:7]
         if month_key in counts:
             counts[month_key] += 1
+            day_key = completed_at[8:10]
+            daily_counts[month_key][day_key] = daily_counts[month_key].get(day_key, 0) + 1
 
     max_count = 0
     for month in months:
@@ -109,6 +114,18 @@ def build_monthly_chart(tasks):
             month["height"] = max(12, int((month["count"] / max_count) * 100))
         else:
             month["height"] = 12
+
+        year_value, month_value = map(int, month["key"].split("-"))
+        days_in_month = calendar.monthrange(year_value, month_value)[1]
+        month["days"] = []
+        for day_number in range(1, days_in_month + 1):
+            day_key = f"{day_number:02d}"
+            month["days"].append(
+                {
+                    "day": day_number,
+                    "count": daily_counts[month["key"]].get(day_key, 0),
+                }
+            )
 
     return {"months": months, "max_count": max_count}
 

@@ -70,7 +70,13 @@
             <div class="chart-scroll">
               <div class="chart-grid">
                 {% for month in chart.months %}
-                  <article class="chart-column">
+                  <button
+                    class="chart-column"
+                    type="button"
+                    data-month-button
+                    data-month-label="{{ month.label }}"
+                    data-month-days='{{ month.days | tojson }}'
+                  >
                     <span class="chart-value">{{ month.count }}</span>
                     <div class="chart-bar-track">
                       <div
@@ -80,10 +86,33 @@
                       ></div>
                     </div>
                     <span class="chart-label">{{ month.label }}</span>
-                  </article>
+                  </button>
                 {% endfor %}
               </div>
             </div>
+
+            <section class="day-panel">
+              <div class="day-panel-header">
+                <div>
+                  <p class="eyebrow">Daily Breakdown</p>
+                  <h3 id="day-panel-title">{{ chart.months[0].label if chart.months else "No month selected" }}</h3>
+                </div>
+                <p class="day-panel-copy">
+                  Click a month in the chart to see all 28 to 31 days and how many completed tasks landed on each day.
+                </p>
+              </div>
+
+              <div class="day-grid" id="day-grid">
+                {% if chart.months %}
+                  {% for day in chart.months[0].days %}
+                    <article class="day-card">
+                      <span class="day-number">{{ day.day }}</span>
+                      <strong class="day-count">{{ day.count }}</strong>
+                    </article>
+                  {% endfor %}
+                {% endif %}
+              </div>
+            </section>
           </section>
         </section>
 
