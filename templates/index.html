@@ -55,6 +55,36 @@
               </p>
             </div>
           </div>
+
+          <section class="chart-panel">
+            <div class="chart-header">
+              <div>
+                <p class="eyebrow">Monthly View</p>
+                <h2>Completion chart through 2030</h2>
+              </div>
+              <p class="chart-caption">
+                Each bar shows how many tasks were completed in that month.
+              </p>
+            </div>
+
+            <div class="chart-scroll">
+              <div class="chart-grid">
+                {% for month in chart.months %}
+                  <article class="chart-column">
+                    <span class="chart-value">{{ month.count }}</span>
+                    <div class="chart-bar-track">
+                      <div
+                        class="chart-bar"
+                        style="height: {{ month.height }}%;"
+                        title="{{ month.label }}: {{ month.count }} completed"
+                      ></div>
+                    </div>
+                    <span class="chart-label">{{ month.label }}</span>
+                  </article>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
         </section>
 
         <section class="board-panel">
