@@ -59,15 +59,21 @@
           <section class="chart-panel">
             <div class="chart-header">
               <div>
-                <p class="eyebrow">Monthly View</p>
-                <h2>Completion chart through 2030</h2>
+                <p class="eyebrow">Calendar View</p>
+                <h2>Planner through 2030</h2>
               </div>
-              <p class="chart-caption">
-                Each bar shows how many tasks were completed in that month.
-              </p>
+              <div class="chart-tools">
+                <p class="chart-caption">
+                  Pick a month and place tasks on specific days with a calendar-style layout.
+                </p>
+                <div class="chart-nav">
+                  <button class="chart-nav-button" id="chart-left" type="button" aria-label="Scroll months left">←</button>
+                  <button class="chart-nav-button" id="chart-right" type="button" aria-label="Scroll months right">→</button>
+                </div>
+              </div>
             </div>
 
-            <div class="chart-scroll">
+            <div class="chart-scroll" id="chart-scroll">
               <div class="chart-grid">
                 {% for month in chart.months %}
                   <button
@@ -75,16 +81,11 @@
                     type="button"
                     data-month-button
                     data-month-label="{{ month.label }}"
+                    data-month-offset="{{ month.start_offset }}"
                     data-month-days='{{ month.days | tojson }}'
                   >
-                    <span class="chart-value">{{ month.count }}</span>
-                    <div class="chart-bar-track">
-                      <div
-                        class="chart-bar"
-                        style="height: {{ month.height }}%;"
-                        title="{{ month.label }}: {{ month.count }} completed"
-                      ></div>
-                    </div>
+                    <span class="chart-value">{{ month.count }} tasks</span>
+                    <div class="month-chip">{{ month.label[:3] }}</div>
                     <span class="chart-label">{{ month.label }}</span>
                   </button>
                 {% endfor %}
@@ -98,16 +99,34 @@
                   <h3 id="day-panel-title">{{ chart.months[0].label if chart.months else "No month selected" }}</h3>
                 </div>
                 <p class="day-panel-copy">
-                  Click a month in the chart to see all 28 to 31 days and how many completed tasks landed on each day.
+                  Click a month to see its calendar. Days show due tasks and task counts.
                 </p>
               </div>
 
-              <div class="day-grid" id="day-grid">
+              <div class="calendar-weekdays">
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+                <span>Sun</span>
+              </div>
+
+              <div class="day-grid calendar-grid" id="day-grid" data-initial-offset="{{ chart.months[0].start_offset if chart.months else 0 }}">
                 {% if chart.months %}
+                  {% for _ in range(chart.months[0].start_offset) %}
+                    <article class="day-card day-card-empty" aria-hidden="true"></article>
+                  {% endfor %}
                   {% for day in chart.months[0].days %}
                     <article class="day-card">
                       <span class="day-number">{{ day.day }}</span>
-                      <strong class="day-count">{{ day.count }}</strong>
+                      <strong class="day-count">{{ day.count }} task{% if day.count != 1 %}s{% endif %}</strong>
+                      <div class="day-task-preview">
+                        {% for task in day.tasks[:2] %}
+                          <span class="day-task-chip {% if task.completed %}day-task-chip-done{% endif %}">{{ task.title }}</span>
+                        {% endfor %}
+                      </div>
                     </article>
                   {% endfor %}
                 {% endif %}

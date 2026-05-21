@@ -25,19 +25,37 @@ const monthButtons = document.querySelectorAll("[data-month-button]");
 const dayPanelTitle = document.querySelector("#day-panel-title");
 const dayGrid = document.querySelector("#day-grid");
 
-function renderDays(days) {
+function renderDays(days, offset) {
   if (!dayGrid) {
     return;
   }
 
   dayGrid.innerHTML = "";
 
+  for (let index = 0; index < offset; index += 1) {
+    const spacer = document.createElement("article");
+    spacer.className = "day-card day-card-empty";
+    spacer.setAttribute("aria-hidden", "true");
+    dayGrid.appendChild(spacer);
+  }
+
   days.forEach((day) => {
     const dayCard = document.createElement("article");
     dayCard.className = "day-card";
+    const preview = (day.tasks || [])
+      .slice(0, 2)
+      .map((task) => {
+        const stateClass = task.completed ? "day-task-chip day-task-chip-done" : "day-task-chip";
+        return `<span class="${stateClass}">${task.title}</span>`;
+      })
+      .join("");
+
+    const taskLabel = day.count === 1 ? "task" : "tasks";
+
     dayCard.innerHTML = `
       <span class="day-number">${day.day}</span>
-      <strong class="day-count">${day.count}</strong>
+      <strong class="day-count">${day.count} ${taskLabel}</strong>
+      <div class="day-task-preview">${preview}</div>
     `;
     dayGrid.appendChild(dayCard);
   });
@@ -58,9 +76,66 @@ monthButtons.forEach((button, index) => {
 
     try {
       const days = JSON.parse(button.dataset.monthDays || "[]");
-      renderDays(days);
+      const offset = Number(button.dataset.monthOffset || "0");
+      renderDays(days, offset);
     } catch (error) {
-      renderDays([]);
+      renderDays([], 0);
     }
   });
 });
+
+const chartScroll = document.querySelector("#chart-scroll");
+const chartLeftButton = document.querySelector("#chart-left");
+const chartRightButton = document.querySelector("#chart-right");
+
+if (chartScroll) {
+  let isDragging = false;
+  let startX = 0;
+  let startScrollLeft = 0;
+
+  chartScroll.addEventListener("pointerdown", (event) => {
+    isDragging = true;
+    startX = event.clientX;
+    startScrollLeft = chartScroll.scrollLeft;
+    chartScroll.classList.add("is-dragging");
+    chartScroll.setPointerCapture(event.pointerId);
+  });
+
+  chartScroll.addEventListener("pointermove", (event) => {
+    if (!isDragging) {
+      return;
+    }
+
+    const distance = event.clientX - startX;
+    chartScroll.scrollLeft = startScrollLeft - distance;
+  });
+
+  function stopDragging(event) {
+    if (!isDragging) {
+      return;
+    }
+
+    isDragging = false;
+    chartScroll.classList.remove("is-dragging");
+
+    if (event && typeof event.pointerId === "number") {
+      chartScroll.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  chartScroll.addEventListener("pointerup", stopDragging);
+  chartScroll.addEventListener("pointercancel", stopDragging);
+  chartScroll.addEventListener("pointerleave", stopDragging);
+}
+
+if (chartScroll && chartLeftButton) {
+  chartLeftButton.addEventListener("click", () => {
+    chartScroll.scrollBy({ left: -260, behavior: "smooth" });
+  });
+}
+
+if (chartScroll && chartRightButton) {
+  chartRightButton.addEventListener("click", () => {
+    chartScroll.scrollBy({ left: 260, behavior: "smooth" });
+  });
+}

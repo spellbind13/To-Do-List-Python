@@ -95,15 +95,13 @@ def build_monthly_chart(tasks):
     current_month = today.month
     end_year = 2030
     months = []
-    counts = {}
-    daily_counts = {}
+    due_map = {}
 
     year = current_year
     month = current_month
     while year < end_year or (year == end_year and month <= 12):
         key = f"{year:04d}-{month:02d}"
-        counts[key] = 0
-        daily_counts[key] = {}
+        due_map[key] = {}
         months.append(
             {
                 "key": key,
@@ -118,40 +116,41 @@ def build_monthly_chart(tasks):
             year += 1
 
     for task in tasks:
-        completed_at = task.get("completed_at")
-        if not completed_at:
+        due_date = task.get("due_date")
+        if not due_date:
             continue
 
-        month_key = completed_at[:7]
-        if month_key in counts:
-            counts[month_key] += 1
-            day_key = completed_at[8:10]
-            daily_counts[month_key][day_key] = daily_counts[month_key].get(day_key, 0) + 1
-
-    max_count = 0
-    for month in months:
-        month["count"] = counts[month["key"]]
-        max_count = max(max_count, month["count"])
-
-    for month in months:
-        if max_count:
-            month["height"] = max(12, int((month["count"] / max_count) * 100))
-        else:
-            month["height"] = 12
-
-        year_value, month_value = map(int, month["key"].split("-"))
-        days_in_month = calendar.monthrange(year_value, month_value)[1]
-        month["days"] = []
-        for day_number in range(1, days_in_month + 1):
-            day_key = f"{day_number:02d}"
-            month["days"].append(
+        month_key = due_date[:7]
+        if month_key in due_map:
+            day_key = due_date[8:10]
+            due_map[month_key].setdefault(day_key, []).append(
                 {
-                    "day": day_number,
-                    "count": daily_counts[month["key"]].get(day_key, 0),
+                    "title": task.get("title", ""),
+                    "completed": task.get("completed", False),
                 }
             )
 
-    return {"months": months, "max_count": max_count}
+    for month in months:
+        year_value, month_value = map(int, month["key"].split("-"))
+        days_in_month = calendar.monthrange(year_value, month_value)[1]
+        first_weekday, _ = calendar.monthrange(year_value, month_value)
+        month["start_offset"] = first_weekday
+        month["days"] = []
+        month["count"] = 0
+
+        for day_number in range(1, days_in_month + 1):
+            day_key = f"{day_number:02d}"
+            day_tasks = due_map[month["key"]].get(day_key, [])
+            month["count"] += len(day_tasks)
+            month["days"].append(
+                {
+                    "day": day_number,
+                    "count": len(day_tasks),
+                    "tasks": day_tasks,
+                }
+            )
+
+    return {"months": months}
 
 
 @app.route("/", methods=["GET"])
