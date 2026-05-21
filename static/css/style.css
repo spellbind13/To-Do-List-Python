@@ -352,7 +352,7 @@ h3 {
 
 .task-form {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 12px;
   margin-bottom: 22px;
 }
@@ -364,6 +364,11 @@ h3 {
   outline: none;
   background: rgba(255, 255, 255, 0.92);
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.task-form input[type="date"] {
+  min-width: 176px;
+  color: var(--text);
 }
 
 .task-form input:focus {

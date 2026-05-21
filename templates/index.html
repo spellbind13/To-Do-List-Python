@@ -135,6 +135,12 @@
               autocomplete="off"
               required
             >
+            <label class="sr-only" for="due_date">Due date</label>
+            <input
+              id="due_date"
+              name="due_date"
+              type="date"
+            >
             <button type="submit">Add task</button>
           </form>
 
@@ -153,6 +159,10 @@
                           Completed
                         {% else %}
                           Ready to finish
+                        {% endif %}
+
+                        {% if task.due_label %}
+                          • Due {{ task.due_label }}
                         {% endif %}
                       </p>
                     </div>

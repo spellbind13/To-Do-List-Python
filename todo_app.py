@@ -39,16 +39,40 @@ def normalize_tasks(tasks):
         if not isinstance(task, dict):
             continue
 
+        title = task.get("title", "").strip()
+        if not title:
+            continue
+
+        due_date = task.get("due_date")
+        due_label = format_due_date(due_date) if due_date else None
+
         normalized.append(
             {
-                "title": task.get("title", "").strip(),
+                "title": title,
                 "completed": bool(task.get("completed", False)),
                 "created_at": task.get("created_at"),
                 "completed_at": task.get("completed_at"),
+                "due_date": due_date,
+                "due_label": due_label,
             }
         )
 
-    return normalized
+    return sort_tasks(normalized)
+
+
+def sort_tasks(tasks):
+    def sort_key(task):
+        due_date = task.get("due_date") or "9999-12-31"
+        return (task.get("completed", False), due_date, task.get("title", "").lower())
+
+    return sorted(tasks, key=sort_key)
+
+
+def format_due_date(due_date):
+    try:
+        return datetime.strptime(due_date, "%Y-%m-%d").strftime("%b %d, %Y")
+    except (TypeError, ValueError):
+        return None
 
 
 def build_summary(tasks):
@@ -142,6 +166,7 @@ def index():
 def add_task():
     tasks = load_tasks()
     task_name = request.form.get("title", "").strip()
+    due_date = request.form.get("due_date", "").strip() or None
 
     if task_name:
         tasks.append(
@@ -150,6 +175,8 @@ def add_task():
                 "completed": False,
                 "created_at": datetime.now().isoformat(),
                 "completed_at": None,
+                "due_date": due_date,
+                "due_label": format_due_date(due_date) if due_date else None,
             }
         )
         save_tasks(tasks)
